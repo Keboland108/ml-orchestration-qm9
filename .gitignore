@@ -1,0 +1,38 @@
+# --- data: keep docs, ignore the actual datasets ---
+data/raw/
+data/*.csv
+data/*.parquet
+data/*.sdf
+!data/README.md
+
+# --- local assignment docs (not for a public repo) ---
+docs/
+
+# --- python / uv ---
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# --- tooling caches ---
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# --- ml / experiment tracking ---
+mlruns/
+mlartifacts/
+
+# --- secrets & env ---
+.env
+.claude/settings.local.json
+
+# --- editor / os ---
+.DS_Store
+.idea/
+.vscode/
+
+# --- marimo ---
+__marimo__/
