@@ -25,3 +25,15 @@ def fmt(c):
 def test(c):
     """Run the test suite."""
     c.run("pytest")
+
+
+@task
+def data(c):
+    """Download the QM9 dataset into data/raw/ (gitignored)."""
+    c.run("python scripts/get_data.py data")
+
+
+@task
+def paper(c):
+    """Download the QM9 paper (Ramakrishnan et al. 2014) into docs/ (gitignored)."""
+    c.run("python scripts/get_data.py paper")
