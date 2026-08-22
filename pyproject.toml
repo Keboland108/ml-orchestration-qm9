@@ -3,7 +3,14 @@ name = "marlabs"
 version = "0.1.0"
 description = "Orchestrated model-lifecycle pipelines over QM9: ingest, train, benchmark, gate, register, serve."
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "mlflow>=2.15",
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "rdkit>=2024.3.1",
+    "scikit-learn>=1.5",
+    "sf-hamilton[visualization]>=1.80",
+]
 
 [build-system]
 requires = ["hatchling"]

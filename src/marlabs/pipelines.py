@@ -1,0 +1,44 @@
+"""Pipeline assembly: a driver = engine modules + config + requested outputs.
+
+The engine modules know nothing about QM9. Everything QM9-specific lives
+in the config dicts HERE, and only here. Split of responsibility:
+with_config() carries what the pipeline IS (column names, model spec —
+stable across runs); execute(inputs=) carries what this run PROCESSES
+(the raw_path of an arriving chunk).
+"""
+
+from __future__ import annotations
+
+from hamilton import driver
+
+from marlabs import ingestion
+
+QM9_CONFIG: dict = {
+    "smiles_column": "smiles",
+    "target_column": "u0_atom",
+}
+
+
+def build_training_driver(config: dict | None = None) -> driver.Driver:
+    """Pipeline #1: train/benchmark/gate. (Modules land incrementally;
+    today: ingest/validate.)"""
+    return (
+        driver.Builder()
+        .with_modules(ingestion)
+        .with_config(dict(config or QM9_CONFIG))
+        .build()
+    )
+
+
+def run_training(raw_path: str) -> dict:
+    """On-demand entry point — the CLI half of requirement 6."""
+    dr = build_training_driver()
+    return dr.execute(["validated_frame"], inputs={"raw_path": raw_path})
+
+
+if __name__ == "__main__":
+    import sys
+
+    path = sys.argv[1] if len(sys.argv) > 1 else "data/raw/qm9.csv"
+    frame = run_training(path)["validated_frame"]
+    print(f"validated_frame: {frame.shape[0]:,} rows x {frame.shape[1]} cols")
