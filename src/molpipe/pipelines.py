@@ -11,23 +11,20 @@ from __future__ import annotations
 
 from hamilton import driver
 
-from marlabs import ingestion
+from molpipe import ingestion
 
 QM9_CONFIG: dict = {
     "smiles_column": "smiles",
     "target_column": "u0_atom",
+    "model_name": "qm9-property-model",
+    "gate_config": {"min_samples": 1000, "margin": 0.5, "n_boot": 1000, "seed": 7},
 }
 
 
 def build_training_driver(config: dict | None = None) -> driver.Driver:
     """Pipeline #1: train/benchmark/gate. (Modules land incrementally;
     today: ingest/validate.)"""
-    return (
-        driver.Builder()
-        .with_modules(ingestion)
-        .with_config(dict(config or QM9_CONFIG))
-        .build()
-    )
+    return driver.Builder().with_modules(ingestion).with_config(dict(config or QM9_CONFIG)).build()
 
 
 def run_training(raw_path: str) -> dict:

@@ -1500,59 +1500,6 @@ wheels = [
 ]
 
 [[package]]
-name = "marlabs"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "mlflow" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "pandas" },
-    { name = "rdkit" },
-    { name = "scikit-learn" },
-    { name = "sf-hamilton", extra = ["visualization"] },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "invoke" },
-    { name = "pytest" },
-    { name = "ruff" },
-]
-eda = [
-    { name = "marimo" },
-    { name = "matplotlib" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "pandas" },
-    { name = "rdkit" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "mlflow", specifier = ">=2.15" },
-    { name = "numpy", specifier = ">=1.26" },
-    { name = "pandas", specifier = ">=2.2" },
-    { name = "rdkit", specifier = ">=2024.3.1" },
-    { name = "scikit-learn", specifier = ">=1.5" },
-    { name = "sf-hamilton", extras = ["visualization"], specifier = ">=1.80" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "invoke", specifier = ">=2.2" },
-    { name = "pytest", specifier = ">=8" },
-    { name = "ruff", specifier = ">=0.6" },
-]
-eda = [
-    { name = "marimo", specifier = ">=0.9" },
-    { name = "matplotlib", specifier = ">=3.8" },
-    { name = "numpy", specifier = ">=1.26" },
-    { name = "pandas", specifier = ">=2.2" },
-    { name = "rdkit", specifier = ">=2024.3.1" },
-]
-
-[[package]]
 name = "matplotlib"
 version = "3.11.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1698,6 +1645,59 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a5/a6/76964d8f265be984838a13b77656b047686c492b61b3f46ca2ef29ef7325/mlflow_tracing-3.15.1.tar.gz", hash = "sha256:ba1c4d873151c0ceeab37f53daf0997feea18a1c092358995072dc53e1944a29", size = 1501188, upload-time = "2026-08-03T09:26:15.541Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f1/c7/13db54bd1b6525a0f09d880260d9dcf8072ae89155dae7a74c9e75a1ba03/mlflow_tracing-3.15.1-py3-none-any.whl", hash = "sha256:3cdef1f1675fe2c7c9f409e132439d65b063e37455b338027bfb2c0f986bebca", size = 1785591, upload-time = "2026-08-03T09:26:13.511Z" },
+]
+
+[[package]]
+name = "molpipe"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "mlflow" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "pandas" },
+    { name = "rdkit" },
+    { name = "scikit-learn" },
+    { name = "sf-hamilton", extra = ["visualization"] },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "invoke" },
+    { name = "pytest" },
+    { name = "ruff" },
+]
+eda = [
+    { name = "marimo" },
+    { name = "matplotlib" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "pandas" },
+    { name = "rdkit" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "mlflow", specifier = ">=2.15" },
+    { name = "numpy", specifier = ">=1.26" },
+    { name = "pandas", specifier = ">=2.2" },
+    { name = "rdkit", specifier = ">=2024.3.1" },
+    { name = "scikit-learn", specifier = ">=1.5" },
+    { name = "sf-hamilton", extras = ["visualization"], specifier = ">=1.80" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "invoke", specifier = ">=2.2" },
+    { name = "pytest", specifier = ">=8" },
+    { name = "ruff", specifier = ">=0.6" },
+]
+eda = [
+    { name = "marimo", specifier = ">=0.9" },
+    { name = "matplotlib", specifier = ">=3.8" },
+    { name = "numpy", specifier = ">=1.26" },
+    { name = "pandas", specifier = ">=2.2" },
+    { name = "rdkit", specifier = ">=2024.3.1" },
 ]
 
 [[package]]

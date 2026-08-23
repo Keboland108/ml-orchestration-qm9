@@ -1,4 +1,4 @@
-"""marlabs — orchestrated model-lifecycle pipelines over QM9.
+"""molpipe — orchestrated model-lifecycle pipelines over QM9.
 
 Engine/config split: this package is the reusable engine (typed stages + the
 promotion gate + the trigger layer). Individual pipelines are configuration over

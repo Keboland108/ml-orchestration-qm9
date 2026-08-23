@@ -24,6 +24,7 @@ dist/
 # --- ml / experiment tracking ---
 mlruns/
 mlartifacts/
+mlflow.db*
 
 # --- secrets & env ---
 .env
