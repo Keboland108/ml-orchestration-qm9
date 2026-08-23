@@ -18,9 +18,9 @@ def _metrics(abs_errors: np.ndarray) -> dict:
 def get_test_input(offset: float, size=2000):
     rng = np.random.default_rng(GATE_CONFIG["seed"])
     candidate_errs = rng.uniform(5, 15, size=size)
-    incumbent_errs = candidate_errs + offset
+    champion_errs = candidate_errs + offset
 
-    return candidate_errs, incumbent_errs
+    return candidate_errs, champion_errs
 
 
 def test_clear_winner_promotes():
@@ -28,18 +28,10 @@ def test_clear_winner_promotes():
 
     decision = gate_decision(
         candidate_metrics=_metrics(cand_errs),
-        incumbent_metrics=_metrics(incu_errs),
+        champion_metrics=_metrics(incu_errs),
         gate_config=GATE_CONFIG,
     )
     assert decision.promote is True
-
-
-# TODO(Kyle) — four more, same pattern, different offsets:
-#   test_identical_models_do_not_promote        offset 0.0
-#   test_real_but_below_margin_does_not_promote offset +0.1, margin 0.5
-#   test_small_sample_abstains                  size=10
-#   test_cold_start_promotes                    incumbent_metrics=None
-#
 
 
 def test_identical_models_do_not_promote():
@@ -47,7 +39,7 @@ def test_identical_models_do_not_promote():
 
     decision = gate_decision(
         candidate_metrics=_metrics(cand_errs),
-        incumbent_metrics=_metrics(incu_errs),
+        champion_metrics=_metrics(incu_errs),
         gate_config=GATE_CONFIG,
     )
     assert decision.promote is False
@@ -58,18 +50,18 @@ def test_real_but_below_margin_does_not_promote():
 
     decision = gate_decision(
         candidate_metrics=_metrics(cand_errs),
-        incumbent_metrics=_metrics(incu_errs),
+        champion_metrics=_metrics(incu_errs),
         gate_config=GATE_CONFIG,
     )
     assert decision.promote is False
 
 
 def test_small_sample_abstains():
-    cand_errs, incum_errs = get_test_input(offset=2.0, size=10)
+    cand_errs, champ_errs = get_test_input(offset=2.0, size=10)
 
     decision = gate_decision(
         candidate_metrics=_metrics(cand_errs),
-        incumbent_metrics=_metrics(incum_errs),
+        champion_metrics=_metrics(champ_errs),
         gate_config=GATE_CONFIG,
     )
     assert decision.promote is False
@@ -81,7 +73,7 @@ def test_cold_start_promotes():
 
     decision = gate_decision(
         candidate_metrics=_metrics(cand_errs),
-        incumbent_metrics=None,
+        champion_metrics=None,
         gate_config=GATE_CONFIG,
     )
     assert decision.promote is True

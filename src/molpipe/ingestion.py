@@ -40,7 +40,7 @@ def validated_frame(
     frame = raw_frame.dropna(subset=[smiles_column, target_column])
     frame = frame.drop_duplicates(subset=smiles_column, keep="first")
     parseable = frame[smiles_column].map(lambda s: Chem.MolFromSmiles(s) is not None)
-    frame = frame[parseable].reset_index(drop=True)
+    frame = pd.DataFrame(frame[parseable].reset_index(drop=True))
 
     n_dropped = n_start - len(frame)
     if n_dropped:

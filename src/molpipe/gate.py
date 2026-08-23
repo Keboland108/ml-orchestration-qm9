@@ -27,16 +27,16 @@ class GateDecision:
     reason: str
 
 
-def get_ci_range(
-    candidate_metrics: dict, incumbent_metrics: dict, n_boot: int, seed: int
+def _get_ci_range(
+    candidate_metrics: dict, champion_metrics: dict, n_boot: int, seed: int
 ) -> tuple[float, float]:
-    """Paired bootstrap 95% CI on the MAE delta (incumbent - candidate).
+    """Paired bootstrap 95% CI on the MAE delta (champion - candidate).
 
     Each round draws one shared index sample for BOTH models — the
     pairing cancels sample-difficulty variance, leaving model skill.
     """
     c_abs_errs = np.asarray(candidate_metrics["abs_errors"])
-    i_abs_errs = np.asarray(incumbent_metrics["abs_errors"])
+    ch_abs_errs = np.asarray(champion_metrics["abs_errors"])
 
     n = len(c_abs_errs)
 
@@ -44,28 +44,28 @@ def get_ci_range(
     idxs = sample_gen.integers(0, n, size=(n_boot, n))
 
     c_avg = c_abs_errs[idxs].mean(axis=1)
-    i_avg = i_abs_errs[idxs].mean(axis=1)
+    ch_avg = ch_abs_errs[idxs].mean(axis=1)
 
-    deltas = i_avg - c_avg  # positive = candidate better
+    deltas = ch_avg - c_avg  # positive = candidate better
     return float(np.percentile(deltas, 2.5)), float(np.percentile(deltas, 97.5))
 
 
-def check_incumbent_exists(incumbent_metrics: dict | None) -> CheckResult:
+def _check_champion_exists(champion_metrics: dict | None) -> CheckResult:
     """Records which path the gate took. Cold start is a state, not a failure."""
-    incumbent_is_none = incumbent_metrics is None
+    champion_is_none = champion_metrics is None
 
     return CheckResult(
         name="cold_start",
-        passed=incumbent_is_none,
+        passed=champion_is_none,
         observed=None,
         threshold=None,
-        reason="no incumbent - candidate becomes first champion"
-        if incumbent_is_none
-        else "incumbent exists - proceed to comparison",
+        reason="no champion - candidate becomes first champion"
+        if champion_is_none
+        else "champion exists - proceed to comparison",
     )
 
 
-def check_sample_floor(candidate_metrics: dict, gate_config: dict) -> CheckResult:
+def _check_sample_floor(candidate_metrics: dict, gate_config: dict) -> CheckResult:
     num_samples = len(candidate_metrics["abs_errors"])
     min_samples = gate_config["min_samples"]
 
@@ -84,12 +84,12 @@ def check_sample_floor(candidate_metrics: dict, gate_config: dict) -> CheckResul
 
 def gate_decision(
     candidate_metrics: dict,
-    incumbent_metrics: dict | None,
+    champion_metrics: dict | None,
     gate_config: dict,
 ) -> GateDecision:
     checks: list[CheckResult] = []
 
-    passed_floor = check_sample_floor(candidate_metrics, gate_config)
+    passed_floor = _check_sample_floor(candidate_metrics, gate_config)
     checks.append(passed_floor)
 
     if not passed_floor.passed:
@@ -102,7 +102,7 @@ def gate_decision(
             reason=passed_floor.reason,
         )
 
-    cold_start = check_incumbent_exists(incumbent_metrics)
+    cold_start = _check_champion_exists(champion_metrics)
     checks.append(cold_start)
 
     if cold_start.passed:
@@ -115,10 +115,10 @@ def gate_decision(
             reason=cold_start.reason,
         )
 
-    delta_observed = float(incumbent_metrics["mae"] - candidate_metrics["mae"])
-    ci_low, ci_high = get_ci_range(
+    delta_observed = float(champion_metrics["mae"] - candidate_metrics["mae"])
+    ci_low, ci_high = _get_ci_range(
         candidate_metrics,
-        incumbent_metrics,
+        champion_metrics,
         n_boot=gate_config["n_boot"],
         seed=gate_config["seed"],
     )
