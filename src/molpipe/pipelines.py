@@ -13,7 +13,16 @@ from pathlib import Path
 
 from hamilton import driver
 
-from molpipe import champion, evaluation, features, gate, ingestion, training, validation
+from molpipe import (
+    champion,
+    evaluation,
+    features,
+    gate,
+    ingestion,
+    scoring,
+    training,
+    validation,
+)
 from molpipe.registry import apply_gate_decision
 
 QM9_CONFIG: dict = {
@@ -28,6 +37,8 @@ QM9_CONFIG: dict = {
     "registry_uri": "sqlite:///mlflow.db",
     "gate_config": {"min_samples": 1000, "margin": 0.5, "n_boot": 1000, "seed": 7},
     "data_path": "data/raw/qm9.csv",
+    "shortlist_size": 100,
+    "rank_ascending": True,
 }
 
 
@@ -36,6 +47,16 @@ def build_training_driver(config: dict | None = None) -> driver.Driver:
     return (
         driver.Builder()
         .with_modules(ingestion, validation, features, training, evaluation, champion, gate)
+        .with_config(dict(config or QM9_CONFIG))
+        .build()
+    )
+
+
+def build_scoring_driver(config: dict | None = None) -> driver.Driver:
+    """Pipeline #2: ingest -> validate -> featurize -> score -> shortlist."""
+    return (
+        driver.Builder()
+        .with_modules(ingestion, validation, features, champion, scoring)
         .with_config(dict(config or QM9_CONFIG))
         .build()
     )
@@ -58,6 +79,24 @@ def run_training(raw_path: str, config: dict | None = None) -> dict:
     )
     apply_gate_decision(result, cfg)
     return result
+
+
+def run_scoring(raw_path: str, config: dict | None = None) -> dict:
+    """On-demand scoring entry point."""
+    cfg = dict(config or QM9_CONFIG)
+    dr = build_scoring_driver(cfg)
+    return dr.execute(["shortlist", "raw_data_hash"], inputs={"raw_path": raw_path})
+
+
+def score_pipeline(path: Path, config: dict | None = None) -> None:
+    cfg = dict(config or QM9_CONFIG)
+    result = run_scoring(str(path), cfg)
+    ranked = result["shortlist"]
+    out = Path(path).with_name("shortlist.csv")
+    ranked.to_csv(out, index=False)
+    predicted = f"predicted_{cfg['target_column']}"
+    print(f"shortlist ({len(ranked)} rows) -> {out}")
+    print(ranked[[cfg["smiles_column"], predicted]].head(10).to_string(index=False))
 
 
 def train_pipeline(path: Path, config: dict | None = None) -> None:

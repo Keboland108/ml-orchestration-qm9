@@ -56,3 +56,10 @@ def test_features(
     test_frame: pd.DataFrame, smiles_column: str, fp_radius: int, fp_bits: int
 ) -> np.ndarray:
     return _fingerprints(test_frame[smiles_column], fp_radius, fp_bits)
+
+
+def scoring_features(
+    validated_frame: pd.DataFrame, smiles_column: str, fp_radius: int, fp_bits: int
+) -> np.ndarray:
+    """Fingerprints of the whole frame. Scoring does not split."""
+    return _fingerprints(validated_frame[smiles_column], fp_radius, fp_bits)

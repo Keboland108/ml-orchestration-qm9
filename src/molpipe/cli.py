@@ -3,7 +3,7 @@ from typing import Annotated
 
 import typer
 
-from molpipe.pipelines import QM9_CONFIG, train_pipeline
+from molpipe.pipelines import QM9_CONFIG, score_pipeline, train_pipeline
 
 app = typer.Typer()
 
@@ -16,3 +16,13 @@ def train(
 ) -> None:
     config = QM9_CONFIG.copy()
     train_pipeline(path=path, config=config)
+
+
+@app.command()
+def score(
+    path: Annotated[Path, typer.Argument(help="CSV of molecules to score")] = Path(
+        "data/raw/incoming.csv"
+    ),
+) -> None:
+    config = QM9_CONFIG.copy()
+    score_pipeline(path=path, config=config)
