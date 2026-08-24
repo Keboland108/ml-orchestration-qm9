@@ -1,4 +1,4 @@
-"""Registry access. Read side is a DAG source node; write side stays at the edge.
+"""Champion access: the read-side DAG source node. Writes live in registry.py.
 
 Vocabulary: the registered model version holding the `champion` alias is THE
 champion. Pipelines compare a candidate against it. No other terms.
@@ -16,7 +16,7 @@ def champion_model(model_name: str, registry_uri: str) -> Any | None:
     None = cold start (no champion yet) — an expected state, not a failure.
     Only the not-found case maps to None; infrastructure errors raise.
     Read-only I/O — a source node, same category as raw_frame. The WRITE
-    side (register/alias/tags) lives at the trigger edge, never in the DAG.
+    side (register/alias/tags) lives in registry.py, never in the DAG.
     """
     mlflow.set_tracking_uri(registry_uri)
     try:
