@@ -52,15 +52,25 @@ def get_paper() -> None:
 
 
 def get_chunk() -> None:
-    """Sample rows from qm9.csv into incoming.csv - a newly-arrived chunk to score."""
+    """Sample rows from qm9.csv into incoming.csv - a newly-arrived chunk to score.
+
+    Also writes two DISJOINT halves (reference_half.csv, incoming_novel.csv)
+    for the retrain-advisor demo: novel molecules cannot exist inside QM9,
+    so unseen chemistry is simulated with an explicit reference override.
+    """
     import pandas as pd
 
-    src = REPO_ROOT / "data" / "raw" / "qm9.csv"
-    dest = REPO_ROOT / "data" / "raw" / "incoming.csv"
-    frame = pd.read_csv(src).sample(n=5000, random_state=7)
-    frame.to_csv(dest, index=False)
-    print(f"wrote {len(frame):,} rows -> {dest}")
-    print(f"sha256: {sha256_of(dest)}")
+    raw_dir = REPO_ROOT / "data" / "raw"
+    full = pd.read_csv(raw_dir / "qm9.csv")
+
+    incoming = full.sample(n=5000, random_state=7)
+    incoming.to_csv(raw_dir / "incoming.csv", index=False)
+    print(f"wrote {len(incoming):,} rows -> {raw_dir / 'incoming.csv'}")
+
+    halves = full.sample(n=20000, random_state=11)
+    halves.head(10000).to_csv(raw_dir / "reference_half.csv", index=False)
+    halves.tail(10000).to_csv(raw_dir / "incoming_novel.csv", index=False)
+    print("wrote disjoint halves -> reference_half.csv, incoming_novel.csv")
 
 
 def main() -> int:
