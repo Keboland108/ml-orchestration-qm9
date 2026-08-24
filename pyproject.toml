@@ -10,6 +10,7 @@ dependencies = [
     "rdkit>=2024.3.1",
     "scikit-learn>=1.5",
     "sf-hamilton[visualization]>=1.80",
+    "typer>=0.27.1",
 ]
 
 [build-system]
