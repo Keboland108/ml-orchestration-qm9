@@ -51,12 +51,13 @@ def _get_ci_range(
 
 
 def _check_champion_exists(champion_metrics: dict | None) -> CheckResult:
-    """Records which path the gate took. Cold start is a state, not a failure."""
+    """Records which path the gate took. Never objects: passed means
+    no objection to promotion, and champion presence is state, not quality."""
     champion_is_none = champion_metrics is None
 
     return CheckResult(
         name="cold_start",
-        passed=champion_is_none,
+        passed=True,
         observed=None,
         threshold=None,
         reason="no champion - candidate becomes first champion"
@@ -105,7 +106,7 @@ def gate_decision(
     cold_start = _check_champion_exists(champion_metrics)
     checks.append(cold_start)
 
-    if cold_start.passed:
+    if champion_metrics is None:
         return GateDecision(
             promote=True,
             checks=tuple(checks),
