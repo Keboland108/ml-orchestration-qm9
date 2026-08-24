@@ -51,8 +51,20 @@ def get_paper() -> None:
     _download(PAPER_URL, REPO_ROOT / "docs" / "ramakrishnan_2014_qm9.pdf")
 
 
+def get_chunk() -> None:
+    """Sample rows from qm9.csv into incoming.csv - a newly-arrived chunk to score."""
+    import pandas as pd
+
+    src = REPO_ROOT / "data" / "raw" / "qm9.csv"
+    dest = REPO_ROOT / "data" / "raw" / "incoming.csv"
+    frame = pd.read_csv(src).sample(n=5000, random_state=7)
+    frame.to_csv(dest, index=False)
+    print(f"wrote {len(frame):,} rows -> {dest}")
+    print(f"sha256: {sha256_of(dest)}")
+
+
 def main() -> int:
-    targets = {"data": get_data, "paper": get_paper}
+    targets = {"data": get_data, "paper": get_paper, "chunk": get_chunk}
     name = sys.argv[1] if len(sys.argv) > 1 else "data"
     if name not in targets:
         print(f"usage: get_data.py [{'|'.join(targets)}]", file=sys.stderr)

@@ -37,3 +37,9 @@ def data(c):
 def paper(c):
     """Download the QM9 paper (Ramakrishnan et al. 2014) into docs/ (gitignored)."""
     c.run("python scripts/get_data.py paper")
+
+
+@task
+def chunk(c):
+    """Sample a newly-arrived chunk into data/raw/incoming.csv."""
+    c.run("python scripts/get_data.py chunk")
