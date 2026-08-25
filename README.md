@@ -42,6 +42,12 @@ Every command accepts `--config FILE`: a JSON object whose keys merge over the Q
 column names, registry URI, reference `data_path`, gate thresholds, model spec.
 QM9 is just the default config; the engine modules never change.
 
+The config is validated against a schema before any driver is built, so a bad config fails in
+milliseconds instead of after featurizing 130k molecules. Unknown keys are rejected with a
+spelling suggestion, types and ranges are enforced, and the nested `gate_config` and
+`model_spec` sections merge key-by-key — overriding `margin` alone leaves `min_samples`,
+`n_boot` and `seed` at their defaults.
+
 ## Architecture
 
 ![architecture sketch](assets/architecture.png)
@@ -83,10 +89,11 @@ Every run records the joint state that produced it: `model_kind`, `raw_data_hash
 
 ## Tests
 
-`uv run pytest` runs four suites:
+`uv run pytest` runs five suites:
 
 - `test_gate.py` — promotion logic: sample floor, cold start, bootstrap margin.
-- `test_validation.py` — schema and row checks: missing columns, non-numeric targets, nulls, duplicates, unparseable SMILES, a chunk left with no valid rows.
+- `test_config.py` — config schema: unknown keys, wrong types, out-of-range values, nested merge.
+- `test_validation.py` — schema and row checks: missing columns, non-numeric targets, nulls, duplicates, unparseable SMILES, SMILES canonicalization, a chunk left with no valid rows.
 - `test_registry.py` — rollback against a temporary registry: eligibility skips a version rolled back after promotion.
 - `test_failure_record.py` — a crash mid-DAG still writes a FAILED audit run with the error.
 
@@ -106,8 +113,9 @@ CI (GitHub Actions) lints with ruff and runs the suite on every push.
 
 ```
 src/molpipe/
+  config.py        QM9 defaults + the schema every config is validated against
   ingestion.py     read one raw chunk, establish its identity (content hashes)
-  validation.py    schema + row checks: bad rows drop, bad files raise
+  validation.py    schema + row checks: bad rows drop, bad files raise; SMILES canonicalized
   features.py      Morgan fingerprint featurization
   training.py      fit the configured estimator (dummy | ridge | hist_gbr)
   evaluation.py    candidate vs champion metrics on the same held-out split
@@ -119,6 +127,6 @@ src/molpipe/
   agents.py        the LLM edge: explain + advise
   watch.py         landing-directory poller, advisor-screened
   cli.py, main.py  Typer commands and the entry point
-tests/             gate, validation, registry rollback
+tests/             gate, config, validation, registry rollback, failure records
 scripts/get_data.py  download QM9, sample chunks
 ```

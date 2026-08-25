@@ -33,10 +33,11 @@ def raw_data_hash(raw_path: str) -> str:
 
 def dataset_content_hash(validated_frame: pd.DataFrame, smiles_column: str) -> str:
     """DATASET identity: sha256 over the sorted row identities (canonical
-    SMILES) of the deduped frame.
+    SMILES, canonicalized in validation) of the deduped frame.
 
     Packaging-invariant: the same rows arriving in differently-shaped chunks
-    produce the same hash. Answers "what data trained this model."
+    produce the same hash, and so do the same molecules written differently.
+    Answers "what data trained this model."
     """
     keys = "\n".join(sorted(validated_frame[smiles_column]))
     return hashlib.sha256(keys.encode()).hexdigest()

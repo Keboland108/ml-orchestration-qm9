@@ -67,6 +67,37 @@ def test_duplicate_smiles_keeps_first():
     assert vdf.loc[vdf[SMILES] == "CC", TARGET].iloc[0] == 1
 
 
+def test_smiles_are_canonicalized():
+    """Non-canonical input comes out in RDKit's canonical form."""
+    rows = [("OCC", 1.0), ("C1=CC=CC=C1", 2.0)]
+
+    vdf = validated_frame(_frame(rows), SMILES, TARGET)
+
+    assert list(vdf[SMILES]) == ["CCO", "c1ccccc1"]
+
+
+def test_duplicate_molecules_collapse_across_spellings():
+    """Same molecule, two spellings: one row, not two.
+
+    This is what makes the content hash and the hash split per-molecule
+    rather than per-string.
+    """
+    rows = [("CCO", 1.0), ("OCC", 2.0), ("C(C)O", 3.0)]
+
+    vdf = validated_frame(_frame(rows), SMILES, TARGET)
+
+    assert len(vdf) == 1
+    assert vdf[TARGET].iloc[0] == 1.0
+
+
+def test_non_string_smiles_dropped():
+    rows = [("CC", 1.0), (3.5, 2.0)]
+
+    vdf = validated_frame(_frame(rows), SMILES, TARGET)
+
+    assert list(vdf[SMILES]) == ["CC"]
+
+
 def test_all_rows_dirty_raises():
     rows = [(None, 1), ("C((C", 2.0)]
 

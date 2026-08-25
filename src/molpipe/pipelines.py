@@ -24,25 +24,20 @@ from molpipe import (
     training,
     validation,
 )
+from molpipe.config import QM9_CONFIG, resolve_config, validate_config
 from molpipe.registry import apply_gate_decision, record_failure
 
 logger = logging.getLogger(__name__)
 
-QM9_CONFIG: dict = {
-    "smiles_column": "smiles",
-    "target_column": "u0_atom",
-    "test_fraction": 0.2,
-    "split_seed": 7,
-    "fp_radius": 2,
-    "fp_bits": 2048,
-    "model_spec": {"kind": "dummy"},
-    "model_name": "qm9-property-model",
-    "registry_uri": "sqlite:///mlflow.db",
-    "gate_config": {"min_samples": 1000, "margin": 0.5, "n_boot": 1000, "seed": 7},
-    "data_path": "data/raw/qm9.csv",
-    "shortlist_size": 100,
-    "rank_ascending": True,
-}
+__all__ = [
+    "QM9_CONFIG",
+    "build_scoring_driver",
+    "build_training_driver",
+    "run_scoring",
+    "run_training",
+    "score_pipeline",
+    "train_pipeline",
+]
 
 
 def build_training_driver(config: dict | None = None) -> driver.Driver:
@@ -50,7 +45,7 @@ def build_training_driver(config: dict | None = None) -> driver.Driver:
     return (
         driver.Builder()
         .with_modules(ingestion, validation, features, training, evaluation, champion, gate)
-        .with_config(dict(config or QM9_CONFIG))
+        .with_config(validate_config(dict(config or QM9_CONFIG)))
         .build()
     )
 
@@ -60,7 +55,7 @@ def build_scoring_driver(config: dict | None = None) -> driver.Driver:
     return (
         driver.Builder()
         .with_modules(ingestion, validation, features, champion, scoring)
-        .with_config(dict(config or QM9_CONFIG))
+        .with_config(validate_config(dict(config or QM9_CONFIG)))
         .build()
     )
 
@@ -72,7 +67,7 @@ def run_training(raw_path: str, config: dict | None = None) -> dict:
     catches it, writes a FAILED run via record_failure, and re-raises. The
     process fails loudly; the ledger keeps no gaps.
     """
-    cfg = dict(config or QM9_CONFIG)
+    cfg = resolve_config(config)
     dr = build_training_driver(cfg)
     try:
         result = dr.execute(
@@ -100,13 +95,13 @@ def run_training(raw_path: str, config: dict | None = None) -> dict:
 
 def run_scoring(raw_path: str, config: dict | None = None) -> dict:
     """On-demand scoring entry point."""
-    cfg = dict(config or QM9_CONFIG)
+    cfg = resolve_config(config)
     dr = build_scoring_driver(cfg)
     return dr.execute(["shortlist", "raw_data_hash"], inputs={"raw_path": raw_path})
 
 
 def score_pipeline(path: Path, config: dict | None = None) -> None:
-    cfg = dict(config or QM9_CONFIG)
+    cfg = resolve_config(config)
     result = run_scoring(str(path), cfg)
     ranked = result["shortlist"]
     out = Path(path).with_name("shortlist.csv")

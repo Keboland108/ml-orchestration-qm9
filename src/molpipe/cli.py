@@ -4,7 +4,8 @@ from typing import Annotated
 
 import typer
 
-from molpipe.pipelines import QM9_CONFIG, score_pipeline, train_pipeline
+from molpipe.config import ConfigError, load_config, validate_config
+from molpipe.pipelines import score_pipeline, train_pipeline
 
 app = typer.Typer(
     help="Model-lifecycle pipelines over QM9: train, gate, promote, score, roll back.",
@@ -18,11 +19,11 @@ ConfigOpt = Annotated[
 
 
 def _load_config(config_path: Path | None) -> dict:
-    """QM9 defaults, with the JSON file's keys merged over them."""
-    cfg = QM9_CONFIG.copy()
-    if config_path is not None:
-        cfg.update(json.loads(config_path.read_text()))
-    return cfg
+    """QM9 defaults, with the JSON file's keys merged over them and validated."""
+    try:
+        return load_config(config_path)
+    except ConfigError as exc:
+        raise typer.BadParameter(str(exc), param_hint="--config") from exc
 
 
 @app.command()
@@ -39,6 +40,10 @@ def train(
     cfg = _load_config(config)
     if model is not None:
         cfg["model_spec"] = {"kind": model}
+        try:
+            validate_config(cfg)
+        except ConfigError as exc:
+            raise typer.BadParameter(str(exc), param_hint="--model") from exc
     target = path if path is not None else Path(cfg["data_path"])
     train_pipeline(path=target, config=cfg)
 

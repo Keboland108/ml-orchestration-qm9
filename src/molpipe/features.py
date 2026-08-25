@@ -1,10 +1,11 @@
 """Split + featurization nodes. Shared verbatim by every pipeline.
 
 The split is hash-based: a molecule's membership is decided by hashing
-its SMILES (salted with split_seed). Deterministic, zero stored state,
-and stable under data arrival — a molecule that was ever in test stays
-in test forever, so a champion's training rows can never drift into a
-later run's benchmark set.
+its canonical SMILES (salted with split_seed). Deterministic, zero stored
+state, and stable under data arrival — a molecule that was ever in test
+stays in test forever, so a champion's training rows can never drift into
+a later run's benchmark set. Validation canonicalizes upstream, so the
+key is the molecule, not the supplier's spelling of it.
 """
 
 from __future__ import annotations
