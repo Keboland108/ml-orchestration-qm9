@@ -63,20 +63,32 @@ The scoring driver reuses four of its five modules from the training driver; onl
 
 ## Promotion, versioning, rollback
 
-- Every training run writes one MLflow run. The run records params (`model_kind`, `raw_data_hash`, `dataset_content_hash`, `config_hash`, `git_sha`), metrics, and a `gate_decision.json` artifact. This happens for promoted and for rejected candidates.
-- The gate runs three checks: a minimum sample count, cold-start detection, and a paired-bootstrap confidence interval on the MAE delta against the champion. A passed check means the check found no reason to block promotion.
-- On promotion, `registry.py` logs the candidate as a new registered model version. It moves the `champion` alias to that version in a single API call. It sets a `promoted_at` tag on the version.
-- A rejected candidate does not change the registry. The rejected candidate exists only in the run history.
-- The `rollback` command points the alias at the newest version that has a `promoted_at` tag and no later `rolled_back_at` tag. It sets `rolled_back_at` and `rollback_reason` tags on the demoted version.
-- The `champion` alias is the only pointer the scoring pipeline reads. On a fresh registry, the training pipeline continues without a champion on the cold-start path. The scoring pipeline raises an error.
+Three outcomes, one ledger. Every training attempt writes exactly one MLflow run:
+
+| Outcome | Run ledger | Registry |
+|---|---|---|
+| **Promoted** | FINISHED run: params, metrics, `gate_decision.json` | New model version, `champion` alias moved, `promoted_at` tag |
+| **Rejected** | Same FINISHED run and artifacts — non-promotion is a recorded success | Untouched — the candidate exists only in run history |
+| **Crashed** | FAILED run: params plus a `failure.json` with the error | Untouched |
+
+Every run records the joint state that produced it: `model_kind`, `raw_data_hash` (which file arrived), `dataset_content_hash` (which rows trained), `config_hash`, and `git_sha`. The watcher counts only FINISHED runs as trained, so a crashed chunk stays eligible for retraining.
+
+**The gate** runs three checks: a minimum held-out sample count, cold-start detection, and a paired-bootstrap confidence interval on the MAE delta against the champion. A passed check means the check found no reason to block promotion.
+
+**Promotion** logs the candidate as a new registered model version with an input signature (uint8 `[n, fp_bits]` fingerprints in, float predictions out), moves the `champion` alias to it in a single API call, and stamps `promoted_at`. Serving the champion is a command, not code: `mlflow models serve -m "models:/qm9-property-model@champion"`.
+
+**Rollback** repoints the alias at the newest version with a `promoted_at` tag and no later `rolled_back_at` tag, then stamps the demoted version with `rolled_back_at` and `rollback_reason`.
+
+**The `champion` alias** is the only pointer the scoring pipeline reads. On a fresh registry the training pipeline continues without a champion on the cold-start path; the scoring pipeline raises an error.
 
 ## Tests
 
-`uv run pytest` runs three suites:
+`uv run pytest` runs four suites:
 
 - `test_gate.py` — promotion logic: sample floor, cold start, bootstrap margin.
-- `test_validation.py` — schema and row checks: missing columns, non-numeric targets, nulls, duplicates, unparseable SMILES.
+- `test_validation.py` — schema and row checks: missing columns, non-numeric targets, nulls, duplicates, unparseable SMILES, a chunk left with no valid rows.
 - `test_registry.py` — rollback against a temporary registry: eligibility skips a version rolled back after promotion.
+- `test_failure_record.py` — a crash mid-DAG still writes a FAILED audit run with the error.
 
 CI (GitHub Actions) lints with ruff and runs the suite on every push.
 
