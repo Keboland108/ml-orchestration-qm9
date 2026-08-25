@@ -16,6 +16,8 @@ import mlflow
 from mlflow.entities.model_registry import ModelVersion
 from mlflow.tracking import MlflowClient
 
+from molpipe.ingestion import raw_data_hash
+
 CHAMPION_ALIAS = "champion"
 
 
@@ -78,6 +80,38 @@ def apply_gate_decision(result: dict, config: dict) -> None:
             value=datetime.now(UTC).isoformat(),
             version=str(version),
         )
+
+
+def record_failure(config: dict, raw_path: str, error: BaseException) -> None:
+    """Audit record for a crashed training run: one FAILED MLflow run.
+
+    Called at the driver boundary when the DAG raises. The run carries the
+    chunk's arrival identity, the config/code identity, and the error as a
+    failure.json artifact. Re-raising stays the caller's job — the process
+    fails loudly, but the run ledger keeps no gaps.
+    """
+    mlflow.set_tracking_uri(config["registry_uri"])
+    try:
+        arrival_hash = raw_data_hash(raw_path)
+    except OSError:
+        arrival_hash = "unreadable"
+
+    mlflow.start_run()
+    try:
+        mlflow.log_params(
+            {
+                "model_kind": config["model_spec"]["kind"],
+                "raw_data_hash": arrival_hash,
+                "config_hash": _config_hash(config),
+                "git_sha": _git_sha(),
+            }
+        )
+        mlflow.log_dict(
+            {"error_type": type(error).__name__, "error": str(error), "raw_path": raw_path},
+            "failure.json",
+        )
+    finally:
+        mlflow.end_run(status="FAILED")
 
 
 def _eligible(version: ModelVersion) -> bool:

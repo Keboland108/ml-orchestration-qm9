@@ -24,6 +24,8 @@ def validated_frame(
     Row-level dirt is DROPPED AND COUNTED (a few bad rows must not kill
     a run): null smiles/target, duplicate SMILES (keep-first),
     RDKit-unparseable SMILES.
+    A chunk with NO valid rows left is a malformed chunk, not row dirt —
+    it raises here, at the module that decided, not two stages later.
     """
     missing = {smiles_column, target_column} - set(raw_frame.columns)
     if missing:
@@ -44,4 +46,6 @@ def validated_frame(
             n_dropped,
             n_start,
         )
+    if frame.empty:
+        raise ValueError(f"no valid rows remain after validation ({n_start} raw rows, all dropped)")
     return frame

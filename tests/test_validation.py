@@ -67,6 +67,13 @@ def test_duplicate_smiles_keeps_first():
     assert vdf.loc[vdf[SMILES] == "CC", TARGET].iloc[0] == 1
 
 
+def test_all_rows_dirty_raises():
+    rows = [(None, 1), ("C((C", 2.0)]
+
+    with pytest.raises(ValueError):
+        validated_frame(_frame(rows), SMILES, TARGET)
+
+
 def test_unparseable_smiles_dropped():
     rows = [(None, 1), ("CC", 2), ("CCO", None), ("c1ccccc1", 1.25), ("C((C", 0.75)]
 
