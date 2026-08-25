@@ -19,9 +19,10 @@ uv run invoke chunk                                 # demo chunks: incoming.csv,
 
 uv run molpipe train                          # pipeline #1, dummy baseline candidate
 uv run molpipe train --model ridge            # pipeline #1, ridge candidate
+uv run molpipe train --model hist_gbr         # pipeline #1, gradient-boosted candidate
 uv run molpipe score data/raw/incoming.csv    # pipeline #2
 
-uv run pytest                                       # gate + validation + registry tests
+uv run pytest                                       # gate, config, validation, registry, failure records
 ```
 
 The agent commands (`explain`, `advise`, `watch`) call the Claude API.
@@ -101,9 +102,11 @@ CI (GitHub Actions) lints with ruff and runs the suite on every push.
 
 ## Design notes
 
-**Why Hamilton.** A function is a node, a module is a namespace, and a pipeline is a driver: a module list plus a config dict. Engine code stays plain Python functions with no framework objects, so every node is unit-testable in isolation. The engine modules know nothing about QM9; everything dataset-specific lives in one config dict in `pipelines.py`.
+**Why Hamilton.** A function is a node, a module is a namespace, and a pipeline is a driver: a module list plus a config dict. Engine code stays plain Python functions with no framework objects, so every node is unit-testable in isolation. The engine modules know nothing about QM9; everything dataset-specific lives in one config dict in `config.py`, which also holds the schema that dict is validated against.
 
 **Why MLflow.** Its registry primitives map directly onto promotion semantics. The alias is the single champion pointer and moves atomically in one call. Version tags form a queryable index (`promoted_at`, `rolled_back_at`). Runs are the append-only audit history. Locally this is one sqlite file; a hosted tracking server is a config change (`registry_uri`), not a code change.
+
+**The held-out split.** Membership is a pure function of the molecule, never of stored state: `md5(split_seed:canonical_smiles)` mapped into `[0, 1)` and compared against `test_fraction`. There is no split manifest to keep in sync, so a molecule that was ever held out stays held out across every future arrival — a champion's training rows cannot drift into a later benchmark set. Validation canonicalizes SMILES first, so the key is the molecule rather than the supplier's spelling of it; 61.7% of QM9's raw SMILES differ from RDKit's canonical form, so that distinction is not academic. The tradeoff is deliberate and worth naming: this buys *stability*, not structural independence. A held-out molecule can still share a Bemis-Murcko scaffold with a training one, which flatters the reported MAE. Hashing the scaffold instead of the molecule is a one-function change in `features._test_mask`.
 
 **Where the LLM is — and is not.** The promotion path is deterministic end to end: checks, gate, registry writes. The two agent tasks read state and produce text. The retrain advisor sits between file detection and training to save compute — a redundant chunk never spends a training run. Its output is a recommendation; when training does run, the same deterministic gate still owns promotion.
 
