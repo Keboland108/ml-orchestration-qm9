@@ -38,6 +38,10 @@ Copy `.env.example` to `.env` and set `ANTHROPIC_API_KEY`.
 | `watch [DIR] [--interval N]` | Poll a landing directory. The advisor screens each new file; training runs only on a positive recommendation. |
 | `rollback [--reason TEXT]` | Repoint the champion alias to the previous eligible version. |
 
+Every command accepts `--config FILE`: a JSON object whose keys merge over the QM9 defaults —
+column names, registry URI, reference `data_path`, gate thresholds, model spec.
+QM9 is just the default config; the engine modules never change.
+
 ## Architecture
 
 ![architecture sketch](assets/architecture.png)
