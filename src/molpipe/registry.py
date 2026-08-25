@@ -14,6 +14,7 @@ from datetime import UTC, datetime
 
 import mlflow
 from mlflow.entities.model_registry import ModelVersion
+from mlflow.models import infer_signature
 from mlflow.tracking import MlflowClient
 
 from molpipe.ingestion import raw_data_hash
@@ -63,8 +64,14 @@ def apply_gate_decision(result: dict, config: dict) -> None:
         if not decision.promote:
             return  # non-promotion is a recorded success; nothing to write
 
+        # Signature makes the served model self-describing:
+        # uint8 [n, fp_bits] fingerprints in, float predictions out.
+        sample = result["test_features"][:5]
+        signature = infer_signature(sample, result["candidate_model"].predict(sample))
         model_info = mlflow.sklearn.log_model(
-            sk_model=result["candidate_model"], registered_model_name=config["model_name"]
+            sk_model=result["candidate_model"],
+            registered_model_name=config["model_name"],
+            signature=signature,
         )
 
         version = model_info.registered_model_version

@@ -54,9 +54,10 @@ def explain_run(config: dict, run_id: str | None = None) -> str:
     }
 
     api = anthropic.Anthropic()
+    # max_tokens caps thinking + text combined on claude-opus-5; leave headroom.
     response = api.messages.create(
         model="claude-opus-5",
-        max_tokens=2000,
+        max_tokens=8000,
         system=SYSTEM,
         messages=[{"role": "user", "content": json.dumps(payload, indent=2)}],
     )
@@ -119,9 +120,11 @@ def retrain_recommendation(config: dict, incoming_path: str) -> dict:
     facts = _chunk_facts(config, incoming_path)
 
     api = anthropic.Anthropic()
+    # max_tokens caps thinking + text combined on claude-opus-5; a truncated
+    # response would cut the JSON mid-string. Leave headroom.
     response = api.messages.create(
         model="claude-opus-5",
-        max_tokens=2000,
+        max_tokens=8000,
         system=RETRAIN_SYSTEM,
         output_config={"format": {"type": "json_schema", "schema": RETRAIN_SCHEMA}},
         messages=[{"role": "user", "content": json.dumps(facts, indent=2)}],

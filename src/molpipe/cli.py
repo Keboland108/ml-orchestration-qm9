@@ -6,7 +6,10 @@ import typer
 
 from molpipe.pipelines import QM9_CONFIG, score_pipeline, train_pipeline
 
-app = typer.Typer()
+app = typer.Typer(
+    help="Model-lifecycle pipelines over QM9: train, gate, promote, score, roll back.",
+    no_args_is_help=True,
+)
 
 ConfigOpt = Annotated[
     Path | None,
@@ -32,6 +35,7 @@ def train(
     ] = None,
     config: ConfigOpt = None,
 ) -> None:
+    """Run the training pipeline on a chunk. The gate decides promotion."""
     cfg = _load_config(config)
     if model is not None:
         cfg["model_spec"] = {"kind": model}
@@ -46,6 +50,7 @@ def score(
     ),
     config: ConfigOpt = None,
 ) -> None:
+    """Predict with the champion and write a ranked shortlist.csv."""
     score_pipeline(path=path, config=_load_config(config))
 
 
@@ -56,6 +61,7 @@ def explain(
     ] = None,
     config: ConfigOpt = None,
 ) -> None:
+    """LLM narrative for a run's gate decision. Logged back onto the run."""
     from molpipe.agents import explain_run
 
     narrative = explain_run(_load_config(config), run_id)
@@ -73,6 +79,7 @@ def advise(
     ] = None,
     config: ConfigOpt = None,
 ) -> None:
+    """LLM retrain recommendation from deterministic data facts."""
     from molpipe.agents import retrain_recommendation
 
     cfg = _load_config(config)
@@ -92,6 +99,7 @@ def watch(
     interval: Annotated[int, typer.Option(help="poll interval in seconds")] = 10,
     config: ConfigOpt = None,
 ) -> None:
+    """Poll a landing directory. The advisor screens each new file; training runs on a yes."""
     from molpipe.watch import watch_directory
 
     watch_directory(_load_config(config), str(directory), interval)
@@ -104,6 +112,7 @@ def rollback(
     ] = "manual rollback",
     config: ConfigOpt = None,
 ) -> None:
+    """Repoint the champion alias to the previous eligible version."""
     from mlflow import MlflowClient
 
     from molpipe import registry
