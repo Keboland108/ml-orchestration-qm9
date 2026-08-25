@@ -28,7 +28,7 @@ def train(
         Path | None, typer.Argument(help="raw CSV chunk to process [default: config data_path]")
     ] = None,
     model: Annotated[
-        str | None, typer.Option(help="estimator kind override (dummy | ridge)")
+        str | None, typer.Option(help="estimator kind override (dummy | ridge | hist_gbr)")
     ] = None,
     config: ConfigOpt = None,
 ) -> None:

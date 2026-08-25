@@ -18,7 +18,7 @@ uv run invoke paper    # download the QM9 paper -> docs/ (gitignored)
 | `raw/qm9.csv` | full QM9: 133,885 molecules, SMILES + computed properties |
 | `raw/incoming.csv` | 5,000-row sample — the "arriving chunk" for the train and score demos |
 | `raw/reference_half.csv`, `raw/incoming_novel.csv` | disjoint halves of a 20,000-row sample — the retrain-advisor demo (novel chemistry against a reference) |
-| `chunks/chunk_01..03.csv` | the first 15,000 rows in file order, sliced into three sequential chunks — data arriving over time |
+| `chunks/chunk_01..03.csv` | the first 22,500 rows in file order, three sequential chunks of 7,500 — data arriving over time, sized so each held-out split clears the gate's evidence floor |
 | `landing/` | drop directory the watcher polls; created on first `molpipe watch` |
 
 ## Simulate arrival over time

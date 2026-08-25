@@ -58,13 +58,18 @@ def get_chunk() -> None:
     reference_half.csv / incoming_novel.csv - two DISJOINT halves for the
     retrain-advisor demo: novel molecules cannot exist inside QM9, so unseen
     chemistry is simulated with an explicit reference override.
-    data/chunks/chunk_01..03.csv - the first 15,000 rows in file order,
-    sliced into three sequential chunks: data arriving over time.
+    data/chunks/chunk_01..03.csv - the first 22,500 rows in file order,
+    sliced into three sequential chunks: data arriving over time. Chunk
+    size clears the gate's held-out evidence floor: 7,500 rows leave
+    ~1,500 in the test split against a min_samples floor of 1,000.
     """
     import pandas as pd
 
     raw_dir = REPO_ROOT / "data" / "raw"
-    full = pd.read_csv(raw_dir / "qm9.csv")
+    source = raw_dir / "qm9.csv"
+    if not source.exists():
+        sys.exit(f"{source} not found - run `invoke data` first")
+    full = pd.read_csv(source)
 
     incoming = full.sample(n=5000, random_state=7)
     incoming.to_csv(raw_dir / "incoming.csv", index=False)
@@ -78,7 +83,7 @@ def get_chunk() -> None:
     chunks_dir = REPO_ROOT / "data" / "chunks"
     chunks_dir.mkdir(exist_ok=True)
     for i in range(3):
-        piece = full.iloc[i * 5000 : (i + 1) * 5000]
+        piece = full.iloc[i * 7500 : (i + 1) * 7500]
         dest = chunks_dir / f"chunk_{i + 1:02d}.csv"
         piece.to_csv(dest, index=False)
         print(f"wrote {len(piece):,} rows -> {dest}")

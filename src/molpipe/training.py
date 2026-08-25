@@ -7,10 +7,12 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from sklearn.dummy import DummyRegressor
+from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.linear_model import Ridge
 
 _ESTIMATORS = {
     "dummy": DummyRegressor,
+    "hist_gbr": HistGradientBoostingRegressor,
     "ridge": Ridge,
 }
 

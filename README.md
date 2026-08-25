@@ -97,7 +97,7 @@ src/molpipe/
   ingestion.py     read one raw chunk, establish its identity (content hashes)
   validation.py    schema + row checks: bad rows drop, bad files raise
   features.py      Morgan fingerprint featurization
-  training.py      fit the configured estimator (dummy | ridge)
+  training.py      fit the configured estimator (dummy | ridge | hist_gbr)
   evaluation.py    candidate vs champion metrics on the same held-out split
   champion.py      registry reads: resolve the champion alias
   gate.py          deterministic promotion decision
