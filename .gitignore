@@ -1,5 +1,7 @@
 # --- data: keep docs, ignore the actual datasets ---
 data/raw/
+data/chunks/
+data/landing/
 data/*.csv
 data/*.parquet
 data/*.sdf

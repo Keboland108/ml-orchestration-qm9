@@ -71,7 +71,7 @@ def advise(
 @app.command()
 def watch(
     directory: Annotated[Path, typer.Argument(help="landing directory to poll")] = Path(
-        "data/raw/landing"
+        "data/landing"
     ),
     interval: Annotated[int, typer.Option(help="poll interval in seconds")] = 10,
 ) -> None:

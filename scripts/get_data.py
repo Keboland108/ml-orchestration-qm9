@@ -58,8 +58,8 @@ def get_chunk() -> None:
     reference_half.csv / incoming_novel.csv - two DISJOINT halves for the
     retrain-advisor demo: novel molecules cannot exist inside QM9, so unseen
     chemistry is simulated with an explicit reference override.
-    chunks/chunk_01..03.csv - the first 15,000 rows in file order, sliced
-    into three sequential chunks: data arriving over time.
+    data/chunks/chunk_01..03.csv - the first 15,000 rows in file order,
+    sliced into three sequential chunks: data arriving over time.
     """
     import pandas as pd
 
@@ -75,7 +75,7 @@ def get_chunk() -> None:
     halves.tail(10000).to_csv(raw_dir / "incoming_novel.csv", index=False)
     print("wrote disjoint halves -> reference_half.csv, incoming_novel.csv")
 
-    chunks_dir = raw_dir / "chunks"
+    chunks_dir = REPO_ROOT / "data" / "chunks"
     chunks_dir.mkdir(exist_ok=True)
     for i in range(3):
         piece = full.iloc[i * 5000 : (i + 1) * 5000]
