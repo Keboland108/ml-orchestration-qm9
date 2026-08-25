@@ -13,8 +13,13 @@ def train(
     path: Annotated[Path, typer.Argument(help="raw CSV chunk to process")] = Path(
         QM9_CONFIG["data_path"]
     ),
+    model: Annotated[
+        str | None, typer.Option(help="estimator kind override (dummy | ridge)")
+    ] = None,
 ) -> None:
     config = QM9_CONFIG.copy()
+    if model is not None:
+        config["model_spec"] = {"kind": model}
     train_pipeline(path=path, config=config)
 
 
@@ -73,3 +78,22 @@ def watch(
     from molpipe.watch import watch_directory
 
     watch_directory(QM9_CONFIG.copy(), str(directory), interval)
+
+
+@app.command()
+def rollback(
+    reason: Annotated[
+        str, typer.Option(help="reason recorded on the demoted version")
+    ] = "manual rollback",
+) -> None:
+    from mlflow import MlflowClient
+
+    from molpipe import registry
+
+    config = QM9_CONFIG.copy()
+    client = MlflowClient(registry_uri=config["registry_uri"])
+    name = config["model_name"]
+    before = client.get_model_version_by_alias(name, registry.CHAMPION_ALIAS)
+    registry.rollback(config, reason)
+    after = client.get_model_version_by_alias(name, registry.CHAMPION_ALIAS)
+    print(f"champion: version {before.version} -> version {after.version}")
