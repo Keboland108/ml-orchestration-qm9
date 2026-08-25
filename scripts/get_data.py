@@ -52,11 +52,14 @@ def get_paper() -> None:
 
 
 def get_chunk() -> None:
-    """Sample rows from qm9.csv into incoming.csv - a newly-arrived chunk to score.
+    """Write the demo chunks from qm9.csv.
 
-    Also writes two DISJOINT halves (reference_half.csv, incoming_novel.csv)
-    for the retrain-advisor demo: novel molecules cannot exist inside QM9,
-    so unseen chemistry is simulated with an explicit reference override.
+    incoming.csv - a newly-arrived chunk to score.
+    reference_half.csv / incoming_novel.csv - two DISJOINT halves for the
+    retrain-advisor demo: novel molecules cannot exist inside QM9, so unseen
+    chemistry is simulated with an explicit reference override.
+    chunks/chunk_01..03.csv - the first 15,000 rows in file order, sliced
+    into three sequential chunks: data arriving over time.
     """
     import pandas as pd
 
@@ -71,6 +74,14 @@ def get_chunk() -> None:
     halves.head(10000).to_csv(raw_dir / "reference_half.csv", index=False)
     halves.tail(10000).to_csv(raw_dir / "incoming_novel.csv", index=False)
     print("wrote disjoint halves -> reference_half.csv, incoming_novel.csv")
+
+    chunks_dir = raw_dir / "chunks"
+    chunks_dir.mkdir(exist_ok=True)
+    for i in range(3):
+        piece = full.iloc[i * 5000 : (i + 1) * 5000]
+        dest = chunks_dir / f"chunk_{i + 1:02d}.csv"
+        piece.to_csv(dest, index=False)
+        print(f"wrote {len(piece):,} rows -> {dest}")
 
 
 def main() -> int:
