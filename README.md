@@ -46,8 +46,8 @@ QM9 is just the default config; the engine modules never change.
 
 ![architecture sketch](assets/architecture.png)
 
-The registry writes have one owner, `registry.py`: the audit run every time, the alias move on promote, the rollback.
-The agents read state and write annotations. They never train, never gate, never move the alias.
+Only `registry.py` writes to the registry. It writes the audit run for every training run, moves the champion alias on promotion, and performs rollback.
+The agents read from the registry and the run history. They write text annotations only. They do not train models, do not make gate decisions, and do not move the alias.
 
 <details>
 <summary>The full node-level DAGs, rendered by Hamilton from the code</summary>
@@ -63,12 +63,12 @@ The scoring driver reuses four of its five modules from the training driver; onl
 
 ## Promotion, versioning, rollback
 
-- Every training run writes one MLflow run: params (`model_kind`, `raw_data_hash`, `dataset_content_hash`, `config_hash`, `git_sha`), metrics, and a `gate_decision.json` artifact. Promoted and rejected candidates alike.
-- The gate runs three checks: minimum sample count, cold-start detection, and a paired-bootstrap confidence interval on the MAE delta against the champion. A check's `passed` means "no objection to promotion".
-- On promote, the candidate is logged as a new registered model version, the `champion` alias moves to it in one call, and the version gets a `promoted_at` tag.
-- On reject, nothing touches the registry. The rejected candidate exists only in run history.
-- Rollback repoints the alias to the newest version that has a `promoted_at` tag and no later `rolled_back_at` tag. The demoted version gets `rolled_back_at` and `rollback_reason` tags.
-- The alias is the only pointer the scoring pipeline reads. On a fresh registry, training tolerates the missing champion (cold start); scoring raises.
+- Every training run writes one MLflow run. The run records params (`model_kind`, `raw_data_hash`, `dataset_content_hash`, `config_hash`, `git_sha`), metrics, and a `gate_decision.json` artifact. This happens for promoted and for rejected candidates.
+- The gate runs three checks: a minimum sample count, cold-start detection, and a paired-bootstrap confidence interval on the MAE delta against the champion. A passed check means the check found no reason to block promotion.
+- On promotion, `registry.py` logs the candidate as a new registered model version. It moves the `champion` alias to that version in a single API call. It sets a `promoted_at` tag on the version.
+- A rejected candidate does not change the registry. The rejected candidate exists only in the run history.
+- The `rollback` command points the alias at the newest version that has a `promoted_at` tag and no later `rolled_back_at` tag. It sets `rolled_back_at` and `rollback_reason` tags on the demoted version.
+- The `champion` alias is the only pointer the scoring pipeline reads. On a fresh registry, the training pipeline continues without a champion on the cold-start path. The scoring pipeline raises an error.
 
 ## Tests
 
