@@ -15,11 +15,11 @@ Run all commands from the repo root. Paths in the config resolve against the wor
 ```bash
 uv sync
 uv run invoke data                                  # download QM9 -> data/raw/qm9.csv
-uv run invoke chunk                                 # sample a chunk -> data/raw/incoming.csv
+uv run invoke chunk                                 # demo chunks: incoming.csv, advisor halves, chunks/chunk_01..03
 
-uv run python -m molpipe.main train                 # pipeline #1, dummy baseline candidate
-uv run python -m molpipe.main train --model ridge   # pipeline #1, ridge candidate
-uv run python -m molpipe.main score data/raw/incoming.csv   # pipeline #2
+uv run molpipe train                          # pipeline #1, dummy baseline candidate
+uv run molpipe train --model ridge            # pipeline #1, ridge candidate
+uv run molpipe score data/raw/incoming.csv    # pipeline #2
 
 uv run pytest                                       # gate + validation + registry tests
 ```
@@ -45,11 +45,14 @@ Copy `.env.example` to `.env` and set `ANTHROPIC_API_KEY`.
 The registry writes have one owner, `registry.py`: the audit run every time, the alias move on promote, the rollback.
 The agents read state and write annotations. They never train, never gate, never move the alias.
 
-Hamilton renders the real DAGs from the code:
+<details>
+<summary>The full node-level DAGs, rendered by Hamilton from the code</summary>
 
 | Training pipeline | Scoring pipeline |
 |---|---|
 | ![training DAG](assets/dag_training.png) | ![scoring DAG](assets/dag_scoring.png) |
+
+</details>
 
 Both pipelines assemble from the same engine modules.
 The scoring driver reuses four of its five modules from the training driver; only `scoring.py` is new.
