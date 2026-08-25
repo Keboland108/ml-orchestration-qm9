@@ -1,0 +1,59 @@
+// Architecture sketch. Render: dot -Tpng -Gdpi=150 assets/architecture.dot -o assets/architecture.png
+digraph molpipe {
+  rankdir=TB
+  compound=true
+  fontname="Helvetica"
+  pad=0.4
+  nodesep=0.5
+  ranksep=0.7
+  node [fontname="Helvetica" shape=box style="rounded,filled" color="#94a3b8" fontcolor="#1e293b" penwidth=1.3 margin="0.26,0.18" fontsize=18]
+  edge [fontname="Helvetica" color="#475569" fontcolor="#475569" fontsize=15 arrowsize=0.9 penwidth=1.4]
+
+  subgraph cluster_training {
+    label="training pipeline"
+    fontsize=17
+    fontcolor="#475569"
+    style="rounded,filled"
+    fillcolor="#f8fafc"
+    color="#cbd5e1"
+    {rank=same
+      t_ingest   [label="ingest" fillcolor="#e2e8f0"]
+      t_validate [label="validate" fillcolor="#e2e8f0"]
+      t_feat     [label="featurize" fillcolor="#e2e8f0"]
+      train      [label="train" fillcolor="#dbeafe"]
+      evaluate   [label="evaluate" fillcolor="#dbeafe"]
+      gate       [label="gate" fillcolor="#fef3c7" color="#d97706"]
+    }
+  }
+
+  advisor  [label="advisor · LLM\nworth training on?" fillcolor="#f5f3ff" color="#7c3aed" style="rounded,filled,dashed" fontcolor="#5b21b6" fontsize=15]
+  explain  [label="explain · LLM\nnarrates the gate decision" fillcolor="#f5f3ff" color="#7c3aed" style="rounded,filled,dashed" fontcolor="#5b21b6" fontsize=15]
+  registry [label="MLflow\nregistry" shape=cylinder fillcolor="#dcfce7" color="#16a34a" margin="0.3,0.18"]
+
+  subgraph cluster_scoring {
+    label="scoring pipeline"
+    fontsize=17
+    fontcolor="#475569"
+    style="rounded,filled"
+    fillcolor="#f8fafc"
+    color="#cbd5e1"
+    {rank=same
+      s_ingest   [label="ingest" fillcolor="#e2e8f0"]
+      s_validate [label="validate" fillcolor="#e2e8f0"]
+      s_feat     [label="featurize" fillcolor="#e2e8f0"]
+      inference  [label="inference" fillcolor="#dbeafe"]
+      shortlist  [label="shortlist" fillcolor="#dbeafe"]
+    }
+  }
+
+  t_ingest -> t_validate -> t_feat -> train -> evaluate -> gate
+  s_ingest -> s_validate -> s_feat -> inference -> shortlist
+
+  advisor -> t_ingest [style=dashed color="#7c3aed" dir=both]
+
+  gate -> registry [label="promote"]
+  registry -> inference [label="champion" lhead=cluster_scoring]
+  registry -> explain [style=dashed color="#7c3aed" dir=both]
+
+  {rank=same; advisor; registry; explain}
+}
